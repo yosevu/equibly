@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { customAlphabet } from 'nanoid'
 
+// TODO rename to NewParty
 export default function NewIncome({ addParty }) {
   const navigate = useNavigate();
+  const [ searchParams ] = useSearchParams();
+  const code = searchParams.get('code');
 
   const [party, setParty] = useState({
+    code,
     income: '',
   });
 
@@ -18,16 +24,16 @@ export default function NewIncome({ addParty }) {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const { income } = party;
+    const { code, income } = party;
+    const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 6)
+    const partyId = nanoid();
 
-    // TODO create document id on client
     addParty({
-      split: { id: 'EJdis9jpjFu0lgqz4wB6' },
-      party: { id: 'c' },
+      splitId: code,
+      partyId,
       income,
     })
     .then((result) => {
-      console.error('debug', result);
     })
     .catch((error) => {
       console.error(error);
@@ -35,15 +41,35 @@ export default function NewIncome({ addParty }) {
 
     navigate('/split', {
       replace: true,
+      state: { splitId: code, partyId },
     });
   };
 
   return (
     <main className="flex flex-col items-center">
       <form onSubmit={handleSubmit}>
+        {/* TODO remove, no need for this field if code is passed in url
+                 grab code form the url in shared link and next button cases
+         */}
+        {/* <div className="form-control">
+          <label className="label">
+            <span className="label-text">Split code</span>
+          </label>
+          <label className="input-group">
+            <input
+              id="code"
+              name="code"
+              type="text"
+              value={code}
+              onChange={handleChange}
+              className="input input-bordered"
+              required
+            />
+          </label>
+        </div> */}
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Income</span>
+            <span className="label-text">Annual income</span>
           </label>
           <label className="input-group">
             <input

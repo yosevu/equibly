@@ -1,20 +1,18 @@
 import { Link, useLocation } from 'react-router-dom'
-// import { customAlphabet } from 'nanoid'
-
-const baseURL = import.meta.env['BASE_URL']
-// const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 6)
 
 export default function NewLink() {
-  const { state } = useLocation();
-  const { split } = state
+  const location = useLocation();
+
+  const id = location.state?.id;
+
+  const code = id ? id : searchParams.get('code');
 
   return (
     <main className="flex flex-col items-center">
-      Share this code:
+      Share this link:
       <br/>
-      <span className="text-2xl font-bold">{split.id}</span>
-      {/* <span className="text-2xl font-bold">{`${nanoid()}`}</span> */}
-      <Link className="btn btn-primary my-5" to="/income">Next</Link>
+      <Link to={`/income?code=${id}`} className="text-2xl font-bold underline hover:no-underline">{id}</Link>
+      <Link className="btn btn-primary my-5" to={`/income?code=${id}`}>Next</Link>
     </main>
   )
 }

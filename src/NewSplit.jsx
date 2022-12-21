@@ -1,9 +1,12 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { customAlphabet } from 'nanoid'
 
 export default function NewSplit({ addSplit }) { 
   const navigate = useNavigate();
+
+  const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 6)
 
   const [split, setSplit] = useState({
     amount: '',
@@ -21,18 +24,19 @@ export default function NewSplit({ addSplit }) {
     event.preventDefault();
 
     const { amount, partyCount } = split;
+    const id = nanoid();
 
-    // TODO create document id on client
-    addSplit({ amount, partyCount })
+    addSplit({ id, amount, partyCount })
       .then((result) => {
-        navigate('/link', {
-          replace: true,
-          state: { split: { id: 'id' }},
-        });
       })
       .catch((error) => {
         console.error(error);
       });
+
+    navigate('/link', {
+      replace: true,
+      state: { id }
+    });
   };
 
   return (

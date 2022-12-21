@@ -1,27 +1,35 @@
+
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore';
 
-export default function SplitProportion({ db }) {
+export default function SplitProportion({ db, removeSplit }) {
   const [amount, setAmount] = useState('');
+  const location = useLocation();
+  const { splitId, partyId } = location.state;
 
-  const partySub = (id) => {
-    const unsub = onSnapshot(doc(db, 'splits', id), (doc) => {
-      const party = doc.data().parties[0];
+  // TODO Look into using custom party id for retrieving amount
+  const partySub = (splitId) => {
+    const unsub = onSnapshot(doc(db, 'splits', splitId), (doc) => {
+      
+      const party = doc.data().parties[partyId];
 
-      if (party.amount) {
-        setAmount(party.amount.toFixed(2))
+      if (party?.amount) {
+        setAmount(party?.amount.toFixed(2))
+        removeSplit(splitId);
+        unsub();
       }
     });
   
     return unsub;
   };
-  // story party data separately to only get relevant party data
-  partySub('EJdis9jpjFu0lgqz4wB6');
+
+  partySub(splitId);  
 
   return (
     <main className="flex flex-col items-center">
       <span>Split:</span>
-      <span className="font-bold text-2xl">{amount} {amount && 'USD'}</span>
+      <span className="font-bold text-2xl">{amount}</span>
     </main>
   )
 }
