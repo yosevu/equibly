@@ -9,78 +9,43 @@ const functions = require('firebase-functions')
 // });
 
 // The Firebase Admin SDK to access Firestore.
-const admin = require('firebase-admin')
+const admin = require('firebase-admin');
 admin.initializeApp()
 
-// Take the text parameter passed to this HTTP endpoint and insert it into
-// Firestore under the path /messages/:documentId/original
-exports.addMessage = functions.https.onRequest(async (req, res) => {
-  // Grab the text parameter.
-  const original = req.query.text
-  // Push the new message into Firestore using the Firebase Admin SDK.
-  const writeResult = await admin
-    .firestore()
-    .collection('messages')
-    .add({ original: original })
-  // Send back a message that we've successfully written the message
-  res.json({ result: `Message with ID: ${writeResult.id} added.` })
-})
-
-// Listens for new messages added to /messages/:documentId/original and creates an
-// uppercase version of the message to /messages/:documentId/uppercase
-exports.makeUppercase = functions.firestore
-  .document('/messages/{documentId}')
-  .onCreate((snap, context) => {
-    // Grab the current value of what was written to Firestore.
-    const original = snap.data().original
-
-    // Access the parameter `{documentId}` with `context.params`
-    functions.logger.log('Uppercasing', context.params.documentId, original)
-
-    const uppercase = original.toUpperCase()
-
-    // You must return a Promise when performing asynchronous tasks inside a Functions such as
-    // writing to Firestore.
-    // Setting an 'uppercase' field in Firestore document returns a Promise.
-    return snap.ref.set({ uppercase }, { merge: true })
-  })
-
-exports.addSplit = functions.https.onRequest(async (req, res) => {
-  const { amount, partyCount } = req.query;
+exports.addSplit = functions.https.onCall(async (data, context) => {
+  const { amount, partyCount } = data;
 
   const writeResult = await admin
     .firestore()
     .collection('splits')
     .add({ amount, partyCount: parseInt(partyCount), parties: [] });
 
-  res.json({ result: `Message with ID: ${writeResult.id} added.`});
+  return { split: { id: writeResult._path.segments[1] } }; 
 });
 
-exports.addParty = functions.https.onRequest(async (req, res) => {
-  const { splitID, partyID, income } = req.query;
-
-  functions.logger.log(income);
+// TODO rename to createSplit
+exports.addParty = functions.https.onCall(async (data, context) => {
+  const { split, party, income } = data; 
 
   const documentRef = await admin
     .firestore()
     .collection('splits')
-    .doc('rbNrQXMue8ezGw5EWjAm');
+    .doc(split.id)
 
   documentRef.get().then((snap) => {
     if (snap.exists) {
-      const { parties, partyCount } = snap.data();
+      const { parties } = snap.data();
 
-      parties.push({ id: partyID, income: parseInt(income) });
+      parties.push({ id: party.id, income: parseInt(income) });
       documentRef.update({ parties });
     }
   });
 
-  res.json({ result: 'Document updated.'});
+  return 'Added party.';
 });
 
-// TODO: rename parties to incomes
+// TODO rename parties to incomes
 function calculateSplit(amount, parties) {
-  // functions.logger.log('debug', amount, incomes);
   const incomesTotal = parties.reduce((total, party) => total + party.income, 0);
   functions.logger.log(incomesTotal)
   
@@ -99,6 +64,7 @@ function calculateSplit(amount, parties) {
 exports.updateSplit = functions.firestore
   .document('/splits/{documentId}')
   .onUpdate(async (change, context) => {
+    const documentId = context.params.documentId;
     const { amount, parties, partyCount } = change.after.data();
 
     if (parties.length === partyCount) {
@@ -107,12 +73,10 @@ exports.updateSplit = functions.firestore
       const documentRef = await admin
         .firestore()
         .collection('splits')
-        .doc('rbNrQXMue8ezGw5EWjAm');
+        .doc(documentId);
       
       documentRef.get().then((snap) => {
         if (snap.exists) {
-          const { parties } = snap.data();
-
           documentRef.update({ parties: result });
         }
       });
