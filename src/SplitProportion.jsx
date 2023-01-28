@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore';
 
-export default function SplitProportion({ db, removeSplit }) {
+export default function SplitProportion({ db }) {
   const [amount, setAmount] = useState('');
   const location = useLocation();
   const { splitId, partyId } = location.state;
@@ -11,13 +11,16 @@ export default function SplitProportion({ db, removeSplit }) {
   // TODO Look into using custom party id for retrieving amount
   const partySub = (splitId) => {
     const unsub = onSnapshot(doc(db, 'splits', splitId), (doc) => {
+      console.log('debug', doc.data())
       
       const party = doc.data().parties[partyId];
 
       if (party?.amount) {
+        // Decrypt
+
         setAmount(party?.amount.toFixed(2))
-        removeSplit(splitId);
-        unsub();
+        // removeSplit(splitId);
+        // unsub();
       }
     });
   

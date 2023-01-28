@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { customAlphabet } from 'nanoid'
+import CryptoJS from 'crypto-js';
+
+function encrypt(text, key) {
+  const ciphertext = CryptoJS.AES.encrypt(text, key).toString();
+
+  return ciphertext;
+}
 
 // TODO rename to NewParty
 export default function NewIncome({ addParty }) {
@@ -28,10 +35,13 @@ export default function NewIncome({ addParty }) {
     const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 6)
     const partyId = nanoid();
 
+    const encryptedIncome = encrypt(income, partyId);
+    console.log('debug enc', encryptedIncome)
+    
     addParty({
       splitId: code,
       partyId,
-      income,
+      income: encryptedIncome,
     })
     .then((result) => {
     })

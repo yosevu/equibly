@@ -2,10 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-
 import App from './App'
 import Home from './Home'
 import NewSplit from './NewSplit'
@@ -38,7 +37,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const addSplit = httpsCallable(functions, 'addSplit');
-const removeSplit = httpsCallable(functions, 'removeSplit');
+// const removeSplit = httpsCallable(functions, 'removeSplit');
 const addParty = httpsCallable(functions, 'addParty');
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -50,7 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/new" element={<NewSplit addSplit={addSplit} />} />
           <Route path="/link" element={<NewLink />} />
           <Route path="/income" element={<NewIncome addParty={addParty} />} />
-          <Route path="/split" element={<SplitProportion db={db} removeSplit={removeSplit} />} />
+          <Route path="/split" element={<SplitProportion db={db} />} />
         </Route>
       </Routes>
     </BrowserRouter>
